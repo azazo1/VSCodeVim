@@ -12,6 +12,12 @@ VSCodeVim is a Vim emulator for [Visual Studio Code](https://code.visualstudio.c
 - 📃 Our [change log](CHANGELOG.md) outlines the breaking/major/minor updates between releases.
 - Report missing features/bugs on [GitHub](https://github.com/azazo1/VSCodeVim/issues).
 
+## ✨ 本分支新增功能
+
+在上游 VSCodeVim 基础上, 本分支额外增加的功能:
+
+- **EasyMotion 词移动支持自定义并兼容 CJK.** `w`/`b`/`e` 以及它们的删除模式变体不再写死只匹配 ASCII 词字符, 而是从 `vim.easymotionWordRegex` 读取跳转目标的匹配规则. 默认规则会把 CJK 字符和全角/半角符号也当作词边界, 并将同一类的连续字符合并为一个词, 因此只有每段连续字符的开头和结尾会成为跳转点.
+
 <details>
  <summary><strong>Table of Contents</strong> (click to expand)</summary>
 
