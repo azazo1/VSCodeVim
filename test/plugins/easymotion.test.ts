@@ -142,6 +142,28 @@ suite('easymotion plugin', () => {
     end: ['ab|c def ghi jkl'],
   });
 
+  // 验证默认 easymotionWordRegex 把连续 CJK 合并为一个词, 而不是每个汉字单独成跳转点.
+  newTest({
+    title: 'Can handle w move with CJK words',
+    start: ['中文 |测试 内容 结尾'],
+    keysPressed: easymotionCommand({ key: 'w' }, '', 'k'),
+    end: ['中文 测试 内容 |结尾'],
+  });
+
+  newTest({
+    title: 'Can handle b move with CJK words',
+    start: ['中文 测试 |内容 结尾'],
+    keysPressed: easymotionCommand({ key: 'b' }, '', 'k'),
+    end: ['|中文 测试 内容 结尾'],
+  });
+
+  newTest({
+    title: 'Can handle e move with CJK words',
+    start: ['中文 |测试 内容 结尾'],
+    keysPressed: easymotionCommand({ key: 'e' }, '', 'k'),
+    end: ['中文 测试 内容 结|尾'],
+  });
+
   newTest({
     title: 'Can handle n-char move',
     start: ['abc |def ghi jkl', 'abc def ghi jkl'],
