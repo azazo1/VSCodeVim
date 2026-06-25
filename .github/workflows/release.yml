@@ -6,12 +6,17 @@ on:
       # fork 双版本号: 上游版本 + fork 版本, 形如 v1.32.4-v0.1.1
       - v[0-9]+.[0-9]+.[0-9]+-v[0-9]+.[0-9]+.[0-9]+
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout VSCodeVim
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -36,29 +41,34 @@ jobs:
       - name: Build extension package
         id: build_vsix
         run: |
-          yarn package;
-          echo ::set-output name=vsix_path::$(ls *.vsix);
+          yarn package
+          vsix_path="$(ls ./*.vsix)"
+          echo "vsix_path=${vsix_path}" >> "$GITHUB_OUTPUT"
 
-      - name: Create release on GitHub
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          draft: false
-          prerelease: false
+      - name: Read tag notes
+        id: tag_notes
+        run: |
+          tag_notes_file="$(mktemp)"
+          git for-each-ref "refs/tags/${GITHUB_REF_NAME}" --format='%(contents)' > "$tag_notes_file"
+          if [ ! -s "$tag_notes_file" ]; then
+            echo "Tag notes are empty" >&2
+            exit 1
+          fi
+          echo "tag_notes_file=$tag_notes_file" >> "$GITHUB_OUTPUT"
 
-      - name: Upload .vsix as release asset to GitHub
-        uses: actions/upload-release-asset@v1
+      - name: Create or update release on GitHub
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.build_vsix.outputs.vsix_path }}
-          asset_name: ${{ steps.build_vsix.outputs.vsix_path }}
-          asset_content_type: application/zip
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+          VSIX_PATH: ${{ steps.build_vsix.outputs.vsix_path }}
+          TAG_NOTES_FILE: ${{ steps.tag_notes.outputs.tag_notes_file }}
+        run: |
+          if gh release view "$TAG_NAME" > /dev/null 2>&1; then
+            gh release edit "$TAG_NAME" --title "$TAG_NAME" --notes-file "$TAG_NOTES_FILE"
+            gh release upload "$TAG_NAME" "$VSIX_PATH" --clobber
+          else
+            gh release create "$TAG_NAME" "$VSIX_PATH" --title "$TAG_NAME" --notes-file "$TAG_NOTES_FILE" --verify-tag
+          fi
 
       # - name: Publish to VSCode Extension Marketplace
       #   run: yarn run vsce publish --yarn
