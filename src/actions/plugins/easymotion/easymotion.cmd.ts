@@ -268,7 +268,7 @@ export abstract class EasyMotionWordMoveCommandBase extends BaseEasyMotionComman
   ): Match[] {
     const regex = this._options.jumpToAnywhere
       ? new RegExp(configuration.easymotionJumpToAnywhereRegex, 'g')
-      : new RegExp('\\w{1,}', 'g');
+      : new RegExp(configuration.easymotionWordRegex, 'g');
     return vimState.easyMotion.sortedSearch(vimState.document, position, regex, options);
   }
 }

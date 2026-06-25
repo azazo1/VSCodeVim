@@ -686,6 +686,11 @@
           "description": "Regex matches for JumpToAnywhere motion.",
           "default": "\\b[A-Za-z0-9]|[A-Za-z0-9]\\b|_.|#.|[a-z][A-Z]"
         },
+        "vim.easymotionWordRegex": {
+          "type": "string",
+          "description": "Regex matches for the word motions (easymotion w/b/e and their delete-mode variants). Each match is a jump target. The default also treats CJK characters and symbols as word boundaries.",
+          "default": "\\w+|[\\u4e00-\\u9fff]|[\\u3000-\\u303f\\uff00-\\uffef]|[!-/:-@\\[-`{-~]"
+        },
         "vim.replaceWithRegister": {
           "type": "boolean",
           "markdownDescription": "Enable the [ReplaceWithRegister](https://github.com/vim-scripts/ReplaceWithRegister) plugin for Vim.",
