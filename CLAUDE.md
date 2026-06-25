@@ -1,5 +1,9 @@
 使用 yarn, 而不是使用其他的 node 工具.
 
+开发之前, 查看 AGENTS.md.
+
+新增功能需要补充在 README.md 相关章节当中.
+
 ## 版本号
 
 本仓库是 upstream(VSCodeVim/Vim) 的 fork, 采用双重版本号机制:

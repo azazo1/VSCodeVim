@@ -91,12 +91,33 @@ export async function loadConfiguration() {
 }
 
 /**
+ * Warns the user if the upstream VSCodeVim extension is enabled alongside this fork.
+ * Both share the same commands and keybindings, so running them together conflicts.
+ * getExtension returns undefined when the upstream is uninstalled or disabled, so a
+ * user who already disabled it is never bothered.
+ */
+function warnIfUpstreamEnabled() {
+  const upstream = vscode.extensions.getExtension('vscodevim.vim');
+  if (upstream === undefined) {
+    return;
+  }
+
+  void vscode.window.showWarningMessage(
+    'This Vim fork (azazo1.vim) is incompatible with the upstream VSCodeVim (vscodevim.vim). ' +
+      'Both are enabled and share the same commands and keybindings, which will conflict. ' +
+      'Please keep only one of them enabled.',
+  );
+}
+
+/**
  * The extension's entry point
  */
 export async function activate(context: vscode.ExtensionContext, handleLocal: boolean = true) {
   ExCommandLine.parser = exCommandParser;
 
   Logger.init();
+
+  warnIfUpstreamEnabled();
 
   // before we do anything else, we need to load the configuration
   await loadConfiguration();
