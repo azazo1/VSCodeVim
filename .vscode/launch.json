@@ -7,7 +7,7 @@
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
-      "args": ["--extensionDevelopmentPath=${workspaceRoot}"],
+      "args": ["--extensionDevelopmentPath=${workspaceRoot}", "--disable-extensions"],
       "stopOnEntry": false,
       "sourceMaps": true,
       "outFiles": ["${workspaceRoot}/{out, node_modules}/**/*.js"],
@@ -19,7 +19,7 @@
       "type": "extensionHost",
       "request": "launch",
       "runtimeExecutable": "${execPath}",
-      "args": ["--extensionDevelopmentPath=${workspaceRoot}"],
+      "args": ["--extensionDevelopmentPath=${workspaceRoot}", "--disable-extensions"],
       "stopOnEntry": false,
       "sourceMaps": true,
       "outFiles": ["${workspaceRoot}/{out, node_modules}/**/*.js"]
@@ -31,7 +31,8 @@
       "runtimeExecutable": "${execPath}",
       "args": [
         "--extensionDevelopmentPath=${workspaceRoot}",
-        "--extensionTestsPath=${workspaceRoot}/out/test"
+        "--extensionTestsPath=${workspaceRoot}/out/test",
+        "--disable-extensions"
       ],
       "stopOnEntry": false,
       "sourceMaps": true,
@@ -44,7 +45,11 @@
       "type": "pwa-extensionHost",
       "debugWebWorkerHost": true,
       "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceRoot}", "--extensionDevelopmentKind=web"],
+      "args": [
+        "--extensionDevelopmentPath=${workspaceRoot}",
+        "--extensionDevelopmentKind=web",
+        "--disable-extensions"
+      ],
       "outFiles": ["${workspaceRoot}/{out, node_modules}/**/*.js"]
     }
   ]

@@ -2,13 +2,13 @@
 
 This document offers a set of guidelines for contributing to VSCodeVim.
 These are just guidelines, not rules; use your best judgment and feel free to propose changes to this document.
-If you need help, drop by on [GitHub Discussions](https://github.com/VSCodeVim/Vim/discussions) or [Slack](https://vscodevim.slack.com/).
+If you need help, drop by on [GitHub Discussions](https://github.com/azazo1/VSCodeVim/discussions) or [Slack](https://vscodevim.slack.com/).
 
 Thanks for helping us in making VSCodeVim better! :clap:
 
 ## Submitting Issues
 
-The [GitHub issue tracker](https://github.com/VSCodeVim/Vim/issues) is the preferred channel for tracking bugs and enhancement suggestions.
+The [GitHub issue tracker](https://github.com/azazo1/VSCodeVim/issues) is the preferred channel for tracking bugs and enhancement suggestions.
 When creating a new bug report do:
 
 - Search against existing issues to check if somebody else has already reported your problem or requested your idea
@@ -17,8 +17,8 @@ When creating a new bug report do:
 ### Improve Existing Issues
 
 - Try to replicate bugs and describe the method if you're able to.
-- Search for [duplicate issues](https://github.com/VSCodeVim/Vim/issues?q=is%3Aissue+is%3Aopen+cursor). See which thread(s) are more mature, and recommend the duplicate be closed, or just provide links to related issues.
-- Find [old issues](https://github.com/VSCodeVim/Vim/issues?page=25&q=is%3Aissue+is%3Aopen) and test them in the latest version of VSCodeVim. If the issue has been resolved, comment & recommend OP to close (or provide more information if not resolved).
+- Search for [duplicate issues](https://github.com/azazo1/VSCodeVim/issues?q=is%3Aissue+is%3Aopen+cursor). See which thread(s) are more mature, and recommend the duplicate be closed, or just provide links to related issues.
+- Find [old issues](https://github.com/azazo1/VSCodeVim/issues?page=25&q=is%3Aissue+is%3Aopen) and test them in the latest version of VSCodeVim. If the issue has been resolved, comment & recommend OP to close (or provide more information if not resolved).
 - Give thumbs up / thumbs down to existing issues, to indicate your support (or not)
 
 ## Submitting Pull Requests

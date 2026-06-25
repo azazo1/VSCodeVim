@@ -19,7 +19,7 @@ A clear and concise description of what you expected to happen.
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
-If remapping-related, please attach log output: https://github.com/VSCodeVim/Vim#debugging-remappings.
+If remapping-related, please attach log output: https://github.com/azazo1/VSCodeVim#debugging-remappings.
 
 **Environment (please complete the following information):**
 
