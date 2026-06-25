@@ -689,7 +689,7 @@
         "vim.easymotionWordRegex": {
           "type": "string",
           "description": "Regex matches for the word motions (easymotion w/b/e and their delete-mode variants). Each match is a jump target. The default also treats CJK characters and symbols as word boundaries.",
-          "default": "\\w+|[\\u4e00-\\u9fff]|[\\u3000-\\u303f\\uff00-\\uffef]|[!-/:-@\\[-`{-~]"
+          "default": "\\w+|[\\u4e00-\\u9fff]+|[\\u3000-\\u303f\\uff00-\\uffef]+|[!-/:-@\\[-`{-~]+"
         },
         "vim.replaceWithRegister": {
           "type": "boolean",
