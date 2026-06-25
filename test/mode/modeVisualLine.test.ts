@@ -202,6 +202,22 @@ suite('Mode Visual Line', () => {
       keysPressed: 'Vgjx',
       end: ['blah', '|duh'],
     });
+
+    // Regression: repeated upward 'gk' must keep expanding the selection instead of
+    // collapsing to one or two lines. See the direction-loss bug in VisualLine mode.
+    newTest({
+      title: "Repeated 'gk' keeps expanding the selection upward",
+      start: ['one', 'two', 'three', 'fo|ur', 'five'],
+      keysPressed: 'Vgkgkgkx',
+      end: ['|five'],
+    });
+
+    newTest({
+      title: "Repeated 'gj' keeps expanding the selection downward",
+      start: ['one', 'tw|o', 'three', 'four', 'five'],
+      keysPressed: 'Vgjgjgjx',
+      end: ['|one'],
+    });
   });
 
   suite('Can handle d/c correctly in Visual Line Mode', () => {

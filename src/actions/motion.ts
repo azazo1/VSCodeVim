@@ -1113,32 +1113,80 @@ class MoveDownByDisplayLine extends MoveByScreenLine {
 }
 
 // Because we can't support moving by screen line when in visualLine mode,
-// we change to moving by regular line in visualLine mode. We can't move by
-// screen line is that our ranges only support a start and stop attribute,
-// and moving by screen line just snaps us back to the original position.
-// Check PR #1600 for discussion.
+// we change to moving by regular logical line in visualLine mode. Our ranges
+// only support a start and stop attribute, and moving by screen line just
+// snaps us back to the original position. Check PR #1600 for discussion.
+//
+// We must NOT reuse MoveByScreenLine here: it issues a 'cursorMove' command and
+// then reads back vimState.editor.selection. But VisualLine's updateView always
+// renders the selection sorted as (topLine.getLineBegin(), bottomLine.getLineEnd()),
+// which discards the real direction. When selecting upward, the rendered selection's
+// active ends up at the bottom, so the next 'cursorMove up' shrinks the selection
+// from its bottom edge and it collapses to one or two lines. Using the logical
+// getUp()/getDown() (same as MoveUpByScreenLineVisualBlock) keeps `start` intact and
+// expands the selection correctly.
 @RegisterAction
-class MoveUpByScreenLineVisualLine extends MoveByScreenLine {
+class MoveUpByScreenLineVisualLine extends BaseMovement {
   override modes = [Mode.VisualLine];
   keys = [
     ['g', 'k'],
     ['g', '<up>'],
   ];
-  movementType: CursorMovePosition = 'up';
-  override by: CursorMoveByUnit = 'line';
-  override value = 1;
+  override preservesDesiredColumn = true;
+
+  public override async execAction(
+    position: Position,
+    vimState: VimState,
+  ): Promise<Position | IMovement> {
+    if (position.line > 0) {
+      return adjustForDesiredColumn({
+        position,
+        desiredColumn: vimState.desiredColumn,
+        multicursorIndex: this.multicursorIndex,
+      }).getUp();
+    }
+    return position;
+  }
+
+  public override async execActionForOperator(
+    position: Position,
+    vimState: VimState,
+  ): Promise<Position> {
+    vimState.currentRegisterMode = RegisterMode.LineWise;
+    return position.getUp();
+  }
 }
 
 @RegisterAction
-class MoveDownByScreenLineVisualLine extends MoveByScreenLine {
+class MoveDownByScreenLineVisualLine extends BaseMovement {
   override modes = [Mode.VisualLine];
   keys = [
     ['g', 'j'],
     ['g', '<down>'],
   ];
-  movementType: CursorMovePosition = 'down';
-  override by: CursorMoveByUnit = 'line';
-  override value = 1;
+  override preservesDesiredColumn = true;
+
+  public override async execAction(
+    position: Position,
+    vimState: VimState,
+  ): Promise<Position | IMovement> {
+    if (position.line < vimState.document.lineCount - 1) {
+      return adjustForDesiredColumn({
+        position,
+        desiredColumn: vimState.desiredColumn,
+        multicursorIndex: this.multicursorIndex,
+      }).getDown();
+    }
+    return position;
+  }
+
+  public override async execActionForOperator(
+    position: Position,
+    vimState: VimState,
+  ): Promise<Position> {
+    vimState.currentRegisterMode = RegisterMode.LineWise;
+    return position.getDown();
+  }
 }
 
 @RegisterAction
