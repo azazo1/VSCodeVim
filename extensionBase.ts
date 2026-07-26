@@ -176,6 +176,8 @@ export async function activate(context: vscode.ExtensionContext, handleLocal: bo
 
     const mh = ModeHandlerMap.get(event.document.uri);
     if (mh) {
+      mh.noteExternalDocumentChange(event.contentChanges);
+
       // Change from VSCode editor should set document.isDirty to true but they initially don't!
       // There is a timing issue in VSCode codebase between when the isDirty flag is set and
       // when registered callbacks are fired. https://github.com/Microsoft/vscode/issues/11339
@@ -288,13 +290,6 @@ export async function activate(context: vscode.ExtensionContext, handleLocal: bo
         return;
       }
 
-      if (
-        e.kind !== vscode.TextEditorSelectionChangeKind.Mouse &&
-        mh.internalSelectionsTracker.shouldIgnoreAsInternalSelectionChangeEvent(e)
-      ) {
-        return;
-      }
-
       // We may receive changes from other panels when, having selections in them containing the same file
       // and changing text before the selection in current panel.
       if (e.textEditor !== mh.vimState.editor) {
@@ -307,6 +302,25 @@ export async function activate(context: vscode.ExtensionContext, handleLocal: bo
       }
 
       if (mh.vimState.currentMode === Mode.EasyMotionMode) {
+        return;
+      }
+
+      if (mh.hasPendingExternalEdit) {
+        if (e.kind === vscode.TextEditorSelectionChangeKind.Mouse) {
+          mh.cancelPendingExternalEdit();
+        } else {
+          taskQueue.enqueueTask(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            await mh.reconcilePendingExternalEdit();
+          });
+          return;
+        }
+      }
+
+      if (
+        e.kind !== vscode.TextEditorSelectionChangeKind.Mouse &&
+        mh.internalSelectionsTracker.shouldIgnoreAsInternalSelectionChangeEvent(e)
+      ) {
         return;
       }
 

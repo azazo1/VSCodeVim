@@ -1,4 +1,5 @@
 import * as assert from 'assert';
+import * as vscode from 'vscode';
 
 import { getAndUpdateModeHandler } from '../../extension';
 import { Mode } from '../../src/mode/mode';
@@ -6,6 +7,17 @@ import { ModeHandler } from '../../src/mode/modeHandler';
 import { Configuration } from '../testConfiguration';
 import { newTest, newTestSkip } from '../testSimplifier';
 import { assertEqualLines, reloadConfiguration, setupWorkspace } from './../testUtils';
+
+function waitForDocumentChange(document: vscode.TextDocument): Promise<void> {
+  return new Promise((resolve) => {
+    const disposable = vscode.workspace.onDidChangeTextDocument((event) => {
+      if (event.document === document && event.contentChanges.length > 0) {
+        disposable.dispose();
+        resolve();
+      }
+    });
+  });
+}
 
 suite('Mode Visual', () => {
   let modeHandler: ModeHandler;
@@ -1696,6 +1708,98 @@ suite('Mode Visual', () => {
     keysPressed: 'vlj<Esc>',
     end: ['one', 't|wo', 'three'],
     endMode: Mode.Normal,
+  });
+
+  suite('External document changes', () => {
+    for (const { title, selectionKeys, expectedText, expectedCharacter } of [
+      {
+        title: 'Native paste over a forward selection keeps the Vim cursor position',
+        selectionKeys: ['0', 'l', 'v', 'l', 'l'],
+        expectedText: 'aXYef',
+        expectedCharacter: 2,
+      },
+      {
+        title: 'Native paste over a backward selection keeps the Vim cursor position',
+        selectionKeys: ['0', 'l', 'l', 'l', 'l', 'v', 'h', 'h'],
+        expectedText: 'abXYf',
+        expectedCharacter: 3,
+      },
+    ]) {
+      test(title, async () => {
+        await modeHandler.handleMultipleKeyEvents([
+          'i',
+          ...'abcdef'.split(''),
+          '<Esc>',
+          ...selectionKeys,
+        ]);
+        await vscode.env.clipboard.writeText('XY');
+        const documentChanged = waitForDocumentChange(modeHandler.vimState.document);
+        await vscode.commands.executeCommand('editor.action.clipboardPasteAction');
+        await documentChanged;
+
+        await modeHandler.handleKeyEvent('<Esc>');
+
+        assertEqualLines([expectedText]);
+        assert.strictEqual(modeHandler.vimState.currentMode, Mode.Normal);
+        assert.strictEqual(modeHandler.vimState.cursorStopPosition.character, expectedCharacter);
+      });
+    }
+
+    for (const { title, selectionKeys, expectedText, expectedCharacter } of [
+      {
+        title: 'Native cut over a forward selection uses the deleted range start',
+        selectionKeys: ['0', 'l', 'v', 'l', 'l'],
+        expectedText: 'aef',
+        expectedCharacter: 1,
+      },
+      {
+        title: 'Native cut over a backward selection uses the deleted range start',
+        selectionKeys: ['0', 'l', 'l', 'l', 'l', 'v', 'h', 'h'],
+        expectedText: 'abf',
+        expectedCharacter: 2,
+      },
+    ]) {
+      test(title, async () => {
+        await modeHandler.handleMultipleKeyEvents([
+          'i',
+          ...'abcdef'.split(''),
+          '<Esc>',
+          ...selectionKeys,
+        ]);
+        const documentChanged = waitForDocumentChange(modeHandler.vimState.document);
+        await vscode.commands.executeCommand('editor.action.clipboardCutAction');
+        await documentChanged;
+
+        await modeHandler.handleKeyEvent('<Esc>');
+
+        assertEqualLines([expectedText]);
+        assert.strictEqual(modeHandler.vimState.currentMode, Mode.Normal);
+        assert.strictEqual(modeHandler.vimState.cursorStopPosition.character, expectedCharacter);
+      });
+    }
+
+    test('External edits use the updated VS Code selection', async () => {
+      await modeHandler.handleMultipleKeyEvents([
+        'i',
+        ...'abcdef'.split(''),
+        '<Esc>',
+        '0',
+        'l',
+        'l',
+        'v',
+        'l',
+        'l',
+      ]);
+      await modeHandler.vimState.editor.edit((editBuilder) => {
+        editBuilder.insert(new vscode.Position(0, 0), 'ZZ');
+      });
+
+      await modeHandler.handleKeyEvent('<Esc>');
+
+      assertEqualLines(['ZZabcdef']);
+      assert.strictEqual(modeHandler.vimState.currentMode, Mode.Normal);
+      assert.strictEqual(modeHandler.vimState.cursorStopPosition.character, 6);
+    });
   });
 
   suite('Can handle o', () => {

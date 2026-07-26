@@ -285,6 +285,33 @@ suite('VisualBlock mode', () => {
     });
   }
 
+  test('External edits in VisualBlock mode use the updated VS Code caret', async () => {
+    await modeHandler.handleMultipleKeyEvents([
+      'i',
+      ...'abc\ndef\nghi'.split(''),
+      '<Esc>',
+      'g',
+      'g',
+      '0',
+      '<C-v>',
+      'j',
+      'l',
+    ]);
+    await modeHandler.vimState.editor.edit((editBuilder) => {
+      editBuilder.insert(new vscode.Position(0, 0), 'Z');
+    });
+    const updatedPosition = new vscode.Position(2, 2);
+    modeHandler.vimState.editor.selections = [
+      new vscode.Selection(updatedPosition, updatedPosition),
+    ];
+
+    await modeHandler.handleKeyEvent('<Esc>');
+
+    assert.strictEqual(modeHandler.vimState.currentMode, Mode.Normal);
+    assert.strictEqual(modeHandler.vimState.cursorStopPosition.line, 2);
+    assert.strictEqual(modeHandler.vimState.cursorStopPosition.character, 2);
+  });
+
   newTest({
     title: 'Select register using `"` works in VisualBlock mode',
     start: ['abcde', '0|1234', 'abcde', '01234'],

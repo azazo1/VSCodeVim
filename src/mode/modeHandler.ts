@@ -62,6 +62,22 @@ interface IModeHandlerMap {
   get(editorId: Uri): ModeHandler | undefined;
 }
 
+type VisualMode = Mode.Visual | Mode.VisualLine | Mode.VisualBlock;
+
+type PendingExternalEdit =
+  | {
+      kind: 'completeSelection';
+      cursor: Position;
+      lastVisualSelection?: {
+        mode: VisualMode;
+        start: Position;
+        end: Position;
+      };
+    }
+  | {
+      kind: 'syncEditorSelections';
+    };
+
 /**
  * ModeHandler is the extension's backbone. It listens to events and updates the VimState.
  * One of these exists for each editor - see ModeHandlerMap
@@ -83,6 +99,9 @@ export class ModeHandler implements vscode.Disposable, IModeHandler {
   private readonly remappers: Remappers;
 
   public internalSelectionsTracker = new InternalSelectionsTracker();
+
+  private lastRenderedSelections: readonly vscode.Selection[] = [];
+  private pendingExternalEdit: PendingExternalEdit | undefined;
 
   /**
    * Was the previous mouse click past EOL
@@ -141,6 +160,14 @@ export class ModeHandler implements vscode.Disposable, IModeHandler {
       return;
     }
 
+    this.syncCursorsFromSelections(selections);
+  }
+
+  private syncCursorsFromSelections(selections: readonly vscode.Selection[]): void {
+    if (selections.length === 0) {
+      return;
+    }
+
     if (
       !this.vimState.cursorStartPosition.isEqual(selections[0].anchor) ||
       !this.vimState.cursorStopPosition.isEqual(selections[0].active)
@@ -151,6 +178,115 @@ export class ModeHandler implements vscode.Disposable, IModeHandler {
     this.vimState.cursors = selections.map(({ active, anchor }) =>
       active.isBefore(anchor) ? new Cursor(anchor.getLeft(), active) : new Cursor(anchor, active),
     );
+  }
+
+  public get hasPendingExternalEdit(): boolean {
+    return this.pendingExternalEdit !== undefined;
+  }
+
+  public noteExternalDocumentChange(
+    changes: readonly vscode.TextDocumentContentChangeEvent[],
+  ): void {
+    const mode = this.vimState.currentMode;
+    if (!isVisualMode(mode) || this.internalSelectionsTracker.isIgnoringIntermediateSelections) {
+      return;
+    }
+
+    if (this.pendingExternalEdit !== undefined) {
+      this.pendingExternalEdit = { kind: 'syncEditorSelections' };
+      return;
+    }
+
+    const renderedSelection = this.lastRenderedSelections[0];
+    const change = changes[0];
+    if (
+      mode !== Mode.VisualBlock &&
+      this.lastRenderedSelections.length === 1 &&
+      changes.length === 1 &&
+      renderedSelection !== undefined &&
+      change !== undefined &&
+      change.range.isEqual(renderedSelection)
+    ) {
+      const cursor = this.getCursorAfterExternalSelectionReplacement(mode, change);
+      this.pendingExternalEdit = {
+        kind: 'completeSelection',
+        cursor,
+        lastVisualSelection:
+          change.text.length === 0
+            ? undefined
+            : {
+                mode,
+                start: change.range.start,
+                end: change.range.start.advancePositionByText(change.text),
+              },
+      };
+      Logger.debug(`Tracking complete external ${Mode[mode]} selection replacement`);
+      return;
+    }
+
+    this.pendingExternalEdit = { kind: 'syncEditorSelections' };
+    Logger.debug(`Tracking external ${Mode[mode]} document change for selection sync`);
+  }
+
+  private getCursorAfterExternalSelectionReplacement(
+    mode: Mode.Visual | Mode.VisualLine,
+    change: vscode.TextDocumentContentChangeEvent,
+  ): Position {
+    const start = change.range.start;
+    if (change.text.length === 0 || (mode === Mode.Visual && change.text.includes('\n'))) {
+      return start;
+    }
+
+    if (mode === Mode.VisualLine) {
+      const firstLine = change.text.split('\n', 1)[0];
+      return start.with({ character: firstLine.match(/\S/)?.index ?? 0 });
+    }
+
+    return start.advancePositionByText(change.text).getLeft();
+  }
+
+  public cancelPendingExternalEdit(): void {
+    this.pendingExternalEdit = undefined;
+  }
+
+  public async reconcilePendingExternalEdit(
+    selections: readonly vscode.Selection[] = this.vimState.editor.selections,
+  ): Promise<void> {
+    const pendingExternalEdit = this.pendingExternalEdit;
+    if (pendingExternalEdit === undefined) {
+      return;
+    }
+    this.pendingExternalEdit = undefined;
+
+    if (pendingExternalEdit.kind === 'completeSelection') {
+      const position = this.vimState.document.validatePosition(pendingExternalEdit.cursor);
+      this.vimState.cursors = [Cursor.atPosition(position)];
+      this.vimState.desiredColumn = position.character;
+      if (pendingExternalEdit.lastVisualSelection !== undefined) {
+        this.vimState.lastVisualSelection = pendingExternalEdit.lastVisualSelection;
+      }
+      await this.setCurrentMode(Mode.Normal);
+      Logger.debug(`Reconciled complete external selection replacement at ${position}`);
+    } else {
+      this.syncCursorsFromSelections(selections);
+      const hasSelection = selections.some((selection) => !selection.isEmpty);
+      if (hasSelection) {
+        await this.setCurrentMode(Mode.Visual);
+        this.vimState.lastVisualSelection = {
+          mode: Mode.Visual,
+          start: this.vimState.cursorStartPosition,
+          end: this.vimState.cursorStopPosition,
+        };
+      } else {
+        this.vimState.cursors = this.vimState.cursors.map((cursor) =>
+          Cursor.atPosition(cursor.stop),
+        );
+        await this.setCurrentMode(Mode.Normal);
+      }
+      Logger.debug(`Reconciled external document change from editor selections`);
+    }
+
+    this.updateView({ drawSelection: true, revealRange: false });
   }
 
   /**
@@ -431,6 +567,8 @@ export class ModeHandler implements vscode.Disposable, IModeHandler {
   }
 
   private async handleKeyEventLangmapped(key: string): Promise<void> {
+    await this.reconcilePendingExternalEdit();
+
     if (this.remapState.forceStopRecursiveRemapping) {
       return;
     }
@@ -1397,6 +1535,8 @@ export class ModeHandler implements vscode.Disposable, IModeHandler {
         return combinedSelections;
       };
       selections = getSelectionsCombined(selections);
+
+      this.lastRenderedSelections = [...selections];
 
       this.internalSelectionsTracker.maybeTrackSelectionsUpdateToIgnore({
         updatedSelections: selections,

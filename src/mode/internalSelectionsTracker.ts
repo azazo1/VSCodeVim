@@ -150,6 +150,10 @@ export class InternalSelectionsTracker {
    */
   private shouldIgnoreIntermediateSelections: boolean = false;
 
+  public get isIgnoringIntermediateSelections(): boolean {
+    return this.shouldIgnoreIntermediateSelections;
+  }
+
   /**
    * To be called when starting an action, to flag that we should start ignoring all incoming
    * VSCode selection change events until we call `stopIgnoringIntermediateSelections`.

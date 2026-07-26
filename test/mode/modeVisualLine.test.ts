@@ -188,6 +188,27 @@ suite('Mode Visual Line', () => {
     });
   });
 
+  test('External replacement over a VisualLine selection uses the first non-blank', async () => {
+    await modeHandler.handleMultipleKeyEvents([
+      'i',
+      ...'one\ntwo\nthree'.split(''),
+      '<Esc>',
+      'G',
+      'V',
+      'k',
+    ]);
+    await modeHandler.vimState.editor.edit((editBuilder) => {
+      editBuilder.replace(modeHandler.vimState.editor.selection, '  alpha\nbeta');
+    });
+
+    await modeHandler.handleKeyEvent('<Esc>');
+
+    assertEqualLines(['one', '  alpha', 'beta']);
+    assert.strictEqual(modeHandler.vimState.currentMode, Mode.Normal);
+    assert.strictEqual(modeHandler.vimState.cursorStopPosition.line, 1);
+    assert.strictEqual(modeHandler.vimState.cursorStopPosition.character, 2);
+  });
+
   suite('Screen line motions in Visual Line Mode', () => {
     newTest({
       title: "Can handle 'gk'",
