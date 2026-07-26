@@ -1,5 +1,7 @@
 # VSCodeVim — Agent Instructions
 
+> 开发之前确保阅读 AGENTS.md 和 CLAUDE.md .
+
 VSCodeVim is a VS Code extension (TypeScript) that emulates Vim modal editing. It targets both desktop and web VS Code environments.
 
 ## Build & Test
