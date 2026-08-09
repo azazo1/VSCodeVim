@@ -279,6 +279,7 @@ class Configuration implements IConfiguration {
   easymotionDimBackground = true;
   easymotionMarkerFontWeight = 'bold';
   easymotionKeys = 'hklyuiopnm,qwertzxcvbasdgjf;';
+  easymotionWordMoveMinSpacing = 2;
   easymotionJumpToAnywhereRegex = '\\b[A-Za-z0-9]|[A-Za-z0-9]\\b|_.|#.|[a-z][A-Z]';
   easymotionWordRegex =
     '\\w+|[\\u4e00-\\u9fff]+|[\\u3000-\\u303f\\uff00-\\uffef]+|[!-/:-@\\[-`{-~]+';

@@ -18,6 +18,7 @@ export interface EasyMotionCharMoveOpions extends EasyMotionMoveOptionsBase {
 export interface EasyMotionWordMoveOpions extends EasyMotionMoveOptionsBase {
   labelPosition?: LabelPosition;
   jumpToAnywhere?: JumpToAnywhere;
+  useMinSpacing?: boolean;
 }
 
 export interface Marker {

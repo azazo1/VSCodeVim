@@ -138,6 +138,7 @@ export class EasyMotion implements IEasyMotion {
 
     outer: for (let lineIdx = lineMin; lineIdx < lineMax; lineIdx++) {
       const line = document.lineAt(lineIdx).text;
+      regex.lastIndex = 0;
       let result = regex.exec(line);
 
       while (result) {

@@ -140,7 +140,7 @@ class EasyMotionStartOfWordForwardsCommand extends EasyMotionWordMoveCommandBase
   keys = buildTriggerKeys({ key: 'w' });
 
   constructor() {
-    super({ searchOptions: 'min' });
+    super({ searchOptions: 'min', useMinSpacing: true });
   }
 }
 
@@ -205,7 +205,7 @@ class EasyMotionBeginningWordCommand extends EasyMotionWordMoveCommandBase {
   keys = buildTriggerKeys({ key: 'b' });
 
   constructor() {
-    super({ searchOptions: 'max' });
+    super({ searchOptions: 'max', useMinSpacing: true });
   }
 }
 

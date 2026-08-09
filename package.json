@@ -691,6 +691,12 @@
           "description": "Regex matches for the word motions (easymotion w/b/e and their delete-mode variants). Each match is a jump target. The default also treats CJK characters and symbols as word boundaries.",
           "default": "\\w+|[\\u4e00-\\u9fff]+|[\\u3000-\\u303f\\uff00-\\uffef]+|[!-/:-@\\[-`{-~]+"
         },
+        "vim.easymotionWordMoveMinSpacing": {
+          "type": "number",
+          "minimum": 1,
+          "default": 2,
+          "description": "Minimum column spacing between adjacent easymotion word markers for w and b. Set to 1 to show every match."
+        },
         "vim.replaceWithRegister": {
           "type": "boolean",
           "markdownDescription": "Enable the [ReplaceWithRegister](https://github.com/vim-scripts/ReplaceWithRegister) plugin for Vim.",

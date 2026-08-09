@@ -269,7 +269,37 @@ export abstract class EasyMotionWordMoveCommandBase extends BaseEasyMotionComman
     const regex = this._options.jumpToAnywhere
       ? new RegExp(configuration.easymotionJumpToAnywhereRegex, 'g')
       : new RegExp(configuration.easymotionWordRegex, 'g');
-    return vimState.easyMotion.sortedSearch(vimState.document, position, regex, options);
+    const matches = vimState.easyMotion.sortedSearch(vimState.document, position, regex, options);
+
+    if (!this._options.useMinSpacing) {
+      return matches;
+    }
+
+    return this.applyMinSpacing(matches);
+  }
+
+  private applyMinSpacing(matches: Match[]): Match[] {
+    const minSpacing = configuration.easymotionWordMoveMinSpacing;
+    if (minSpacing <= 1) {
+      return matches;
+    }
+
+    const kept: Match[] = [];
+    let lastMarkerPosition: Position | undefined;
+
+    for (const match of matches) {
+      const markerPosition = this.resolveMatchPosition(match);
+      if (
+        lastMarkerPosition === undefined ||
+        markerPosition.line !== lastMarkerPosition.line ||
+        Math.abs(markerPosition.character - lastMarkerPosition.character) >= minSpacing
+      ) {
+        kept.push(match);
+        lastMarkerPosition = markerPosition;
+      }
+    }
+
+    return kept;
   }
 }
 

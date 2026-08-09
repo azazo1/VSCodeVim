@@ -129,6 +129,37 @@ suite('easymotion plugin', () => {
   });
 
   newTest({
+    title: 'Can handle w move across lines without dropping later candidates',
+    start: ['|abc def ghi jkl', 'abc def ghi jkl'],
+    keysPressed: easymotionCommand({ key: 'w' }, '', 'y'),
+    end: ['abc def ghi jkl', '|abc def ghi jkl'],
+  });
+
+  newTest({
+    title: 'Can handle w move with minimum spacing 2',
+    config: { easymotion: true, easymotionWordMoveMinSpacing: 2 },
+    start: ['|!\u3002@abc'],
+    keysPressed: easymotionCommand({ key: 'w' }, '', 'k'),
+    end: ['!\u3002@|abc'],
+  });
+
+  newTest({
+    title: 'Can handle w move with minimum spacing 1',
+    config: { easymotion: true, easymotionWordMoveMinSpacing: 1 },
+    start: ['|!\u3002@abc'],
+    keysPressed: easymotionCommand({ key: 'w' }, '', 'k'),
+    end: ['!\u3002|@abc'],
+  });
+
+  newTest({
+    title: 'Can handle b move with minimum spacing 2',
+    config: { easymotion: true, easymotionWordMoveMinSpacing: 2 },
+    start: ['abc@\u3002!|'],
+    keysPressed: easymotionCommand({ key: 'b' }, '', 'k'),
+    end: ['abc|@\u3002!'],
+  });
+
+  newTest({
     title: 'Can handle bd-e move',
     start: ['abc |def ghi jkl'],
     keysPressed: easymotionCommand({ key: 'bde', leaderCount: 3 }, '', 'k'),
