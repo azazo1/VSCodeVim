@@ -385,6 +385,7 @@ export interface IConfiguration {
    */
   insertModeKeyBindings: IKeyRemapping[];
   insertModeKeyBindingsNonRecursive: IKeyRemapping[];
+  insertModeEmacsBindings: boolean;
   normalModeKeyBindings: IKeyRemapping[];
   normalModeKeyBindingsNonRecursive: IKeyRemapping[];
   operatorPendingModeKeyBindings: IKeyRemapping[];

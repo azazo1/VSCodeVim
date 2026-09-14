@@ -19,6 +19,7 @@ export class Configuration implements IConfiguration {
   useSystemClipboard = false;
   useCtrlKeys = false;
   overrideCopy = true;
+  insertModeEmacsBindings = false;
   textwidth = 80;
   hlsearch = false;
   ignorecase = true;

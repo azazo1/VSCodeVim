@@ -493,6 +493,13 @@ export async function activate(context: vscode.ExtensionContext, handleLocal: bo
   });
 
   for (const boundKey of configuration.boundKeyCombinations) {
+    // 绑定键在这里被注册成 "按下某个 vim 键" 的命令, 只适用于命令名由按键本身推导出来的绑定.
+    // 调用别的命令并需要传参的绑定 (比如 `vim.insertModeEmacsBindings` 用到的 `vim.remap` 条目)
+    // 由对应的命令自行注册, 不在这里处理.
+    if (!boundKey.command.startsWith('extension.vim_')) {
+      continue;
+    }
+
     const command = ['<Esc>', '<C-c>'].includes(boundKey.key)
       ? async () => {
           const mh = await getAndUpdateModeHandler();

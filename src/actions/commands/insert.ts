@@ -799,3 +799,29 @@ export class ArrowsInInsertMode extends BaseMovement {
     return newPosition;
   }
 }
+
+/**
+ * Insert 模式下的行首/行尾移动.
+ *
+ * Vim 在 insert 模式下同样支持 <Home>/<End>, 但 VS Code 把这两个键留给编辑器自身, 不会送到扩展,
+ * 因此这两个 action 只会在被派发时命中, 例如 `vim.insertModeEmacsBindings` 把 <C-a>/<C-e> 映射到这里.
+ */
+@RegisterAction
+class MoveLineBeginInInsertMode extends BaseMovement {
+  override modes = [Mode.Insert];
+  keys = ['<Home>'];
+
+  public override async execAction(position: Position, vimState: VimState): Promise<Position> {
+    return position.getLineBegin();
+  }
+}
+
+@RegisterAction
+class MoveLineEndInInsertMode extends BaseMovement {
+  override modes = [Mode.Insert];
+  keys = ['<End>'];
+
+  public override async execAction(position: Position, vimState: VimState): Promise<Position> {
+    return position.getLineEnd();
+  }
+}

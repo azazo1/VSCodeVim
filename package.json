@@ -446,6 +446,76 @@
         "key": "k",
         "command": "notebook.focusPreviousEditor",
         "when": "vim.mode == 'Normal' && editorTextFocus && inputFocus && notebookEditorFocused && notebookEditorCursorAtBoundary != 'bottom' && notebookEditorCursorAtBoundary != 'none'"
+      },
+      {
+        "key": "ctrl+b",
+        "command": "vim.remap",
+        "when": "editorTextFocus && vim.active && vim.use<C-b> && !inDebugRepl && vim.mode == 'Insert' && vim.insertModeEmacsBindings",
+        "args": {
+          "after": [
+            "<left>"
+          ]
+        }
+      },
+      {
+        "key": "ctrl+f",
+        "command": "vim.remap",
+        "when": "editorTextFocus && vim.active && vim.use<C-f> && !inDebugRepl && vim.mode == 'Insert' && vim.insertModeEmacsBindings",
+        "args": {
+          "after": [
+            "<right>"
+          ]
+        }
+      },
+      {
+        "key": "ctrl+p",
+        "command": "vim.remap",
+        "when": "editorTextFocus && vim.active && vim.use<C-p> && !inDebugRepl && vim.mode == 'Insert' && vim.insertModeEmacsBindings && !suggestWidgetVisible",
+        "args": {
+          "after": [
+            "<up>"
+          ]
+        }
+      },
+      {
+        "key": "ctrl+n",
+        "command": "vim.remap",
+        "when": "editorTextFocus && vim.active && vim.use<C-n> && !inDebugRepl && vim.mode == 'Insert' && vim.insertModeEmacsBindings && !suggestWidgetVisible",
+        "args": {
+          "after": [
+            "<down>"
+          ]
+        }
+      },
+      {
+        "key": "ctrl+a",
+        "command": "vim.remap",
+        "when": "editorTextFocus && vim.active && vim.use<C-a> && !inDebugRepl && vim.mode == 'Insert' && vim.insertModeEmacsBindings",
+        "args": {
+          "after": [
+            "<Home>"
+          ]
+        }
+      },
+      {
+        "key": "ctrl+e",
+        "command": "vim.remap",
+        "when": "editorTextFocus && vim.active && vim.use<C-e> && !inDebugRepl && vim.mode == 'Insert' && vim.insertModeEmacsBindings",
+        "args": {
+          "after": [
+            "<End>"
+          ]
+        }
+      },
+      {
+        "key": "ctrl+d",
+        "command": "vim.remap",
+        "when": "editorTextFocus && vim.active && vim.use<C-d> && !inDebugRepl && vim.mode == 'Insert' && vim.insertModeEmacsBindings",
+        "args": {
+          "after": [
+            "<Del>"
+          ]
+        }
       }
     ],
     "configuration": {
@@ -550,6 +620,11 @@
           "type": "array",
           "markdownDescription": "Non-recursive keybinding overrides to use for Insert mode. Allows mapping to Vim commands or VS Code actions. See [README](https://github.com/azazo1/VSCodeVim/#key-remapping) for details.",
           "scope": "application"
+        },
+        "vim.insertModeEmacsBindings": {
+          "type": "boolean",
+          "description": "Use Emacs-style cursor movement in Insert mode: <C-b>/<C-f> move by character, <C-p>/<C-n> move by line, <C-a>/<C-e> move to the beginning/end of the line, and <C-d> deletes the character to the right of the cursor. The suggestion widget keeps <C-p>/<C-n> while it is open. These bindings replace the Vim Insert mode bindings on the same keys.",
+          "default": false
         },
         "vim.visualModeKeyBindings": {
           "type": "array",

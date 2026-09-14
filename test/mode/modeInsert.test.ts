@@ -85,6 +85,24 @@ suite('Mode Insert', () => {
     return assertEqualLines(['', 'text']);
   });
 
+  suite('line begin/end movements', () => {
+    newTest({
+      title: '<Home> moves to the beginning of the line in insert mode',
+      start: ['text|text'],
+      keysPressed: 'i<Home>!',
+      end: ['!|texttext'],
+      endMode: Mode.Insert,
+    });
+
+    newTest({
+      title: '<End> moves to the end of the line in insert mode',
+      start: ['te|xt', 'foo'],
+      keysPressed: 'i<End>!',
+      end: ['text!|', 'foo'],
+      endMode: Mode.Insert,
+    });
+  });
+
   newTest({
     title: "'i' puts you in insert mode before the cursor",
     start: ['text|text'],
