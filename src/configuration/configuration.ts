@@ -201,6 +201,10 @@ class Configuration implements IConfiguration {
     void VSCodeContext.set('vim.overrideCopy', this.overrideCopy);
     void VSCodeContext.set('vim.overrideCtrlC', this.overrideCopy || this.useCtrlKeys);
     void VSCodeContext.set('vim.insertModeEmacsBindings', this.insertModeEmacsBindings);
+    void VSCodeContext.set(
+      'vim.insertModeEmacsBindingsScreenLine',
+      this.insertModeEmacsBindingsScreenLine,
+    );
 
     // workaround for circular dependency that would
     // prevent packaging if we simply called `updateLangmap(configuration.langmap);`
@@ -241,6 +245,8 @@ class Configuration implements IConfiguration {
   overrideCopy = true;
 
   insertModeEmacsBindings = false;
+
+  insertModeEmacsBindingsScreenLine = false;
 
   hlsearch = false;
 

@@ -20,6 +20,7 @@ export class Configuration implements IConfiguration {
   useCtrlKeys = false;
   overrideCopy = true;
   insertModeEmacsBindings = false;
+  insertModeEmacsBindingsScreenLine = false;
   textwidth = 80;
   hlsearch = false;
   ignorecase = true;

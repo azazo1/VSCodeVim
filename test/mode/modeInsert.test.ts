@@ -101,6 +101,38 @@ suite('Mode Insert', () => {
       end: ['text!|', 'foo'],
       endMode: Mode.Insert,
     });
+
+    newTest({
+      title: '<Home> stops at the first non-whitespace character',
+      start: ['    te|xt'],
+      keysPressed: 'i<Home>!',
+      end: ['    !|text'],
+      endMode: Mode.Insert,
+    });
+
+    newTest({
+      title: '<Home> goes on to the very beginning of the line',
+      start: ['    te|xt'],
+      keysPressed: 'i<Home><Home>!',
+      end: ['!|    text'],
+      endMode: Mode.Insert,
+    });
+
+    newTest({
+      title: '<Home> toggles back to the first non-whitespace character',
+      start: ['|    text'],
+      keysPressed: 'i<Home>!',
+      end: ['    !|text'],
+      endMode: Mode.Insert,
+    });
+
+    newTest({
+      title: '<C-p>/<C-n> move by logical line in insert mode',
+      start: ['li|ne1', 'line2'],
+      keysPressed: 'i<C-S-n>!',
+      end: ['line1', 'li!|ne2'],
+      endMode: Mode.Insert,
+    });
   });
 
   newTest({

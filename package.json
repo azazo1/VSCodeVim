@@ -473,7 +473,7 @@
         "when": "editorTextFocus && vim.active && vim.use<C-p> && !inDebugRepl && vim.mode == 'Insert' && vim.insertModeEmacsBindings && !suggestWidgetVisible",
         "args": {
           "after": [
-            "<up>"
+            "<C-S-p>"
           ]
         }
       },
@@ -483,7 +483,7 @@
         "when": "editorTextFocus && vim.active && vim.use<C-n> && !inDebugRepl && vim.mode == 'Insert' && vim.insertModeEmacsBindings && !suggestWidgetVisible",
         "args": {
           "after": [
-            "<down>"
+            "<C-S-n>"
           ]
         }
       },
@@ -623,7 +623,12 @@
         },
         "vim.insertModeEmacsBindings": {
           "type": "boolean",
-          "description": "Use Emacs-style cursor movement in Insert mode: <C-b>/<C-f> move by character, <C-p>/<C-n> move by line, <C-a>/<C-e> move to the beginning/end of the line, and <C-d> deletes the character to the right of the cursor. The suggestion widget keeps <C-p>/<C-n> while it is open. These bindings replace the Vim Insert mode bindings on the same keys.",
+          "description": "Use Emacs-style cursor movement in Insert mode: <C-b>/<C-f> move by character, <C-p>/<C-n> move by line, <C-a> toggles between the first non-whitespace character and the beginning of the line, <C-e> moves to the end of the line, and <C-d> deletes the character to the right of the cursor. The suggestion widget keeps <C-p>/<C-n> while it is open. These bindings replace the Vim Insert mode bindings on the same keys.",
+          "default": false
+        },
+        "vim.insertModeEmacsBindingsScreenLine": {
+          "type": "boolean",
+          "description": "Measure lines by screen line (a line after word wrap) instead of by logical line for the bindings added by `vim.insertModeEmacsBindings`: <C-a>/<C-e> move to the beginning/end of the screen line and <C-p>/<C-n> move by screen line. <C-a> still toggles between the first non-whitespace character and the very beginning of that line. Arrow keys are unaffected. Requires `vim.insertModeEmacsBindings`.",
           "default": false
         },
         "vim.visualModeKeyBindings": {

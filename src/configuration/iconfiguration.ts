@@ -386,6 +386,13 @@ export interface IConfiguration {
   insertModeKeyBindings: IKeyRemapping[];
   insertModeKeyBindingsNonRecursive: IKeyRemapping[];
   insertModeEmacsBindings: boolean;
+
+  /**
+   * Emacs 风格的行移动按可视行 (折行后的屏幕行) 而不是逻辑行计算.
+   *
+   * 只影响 `vim.insertModeEmacsBindings` 引入的 <C-a>/<C-e> 与 <C-p>/<C-n>, 箭头键不受影响.
+   */
+  insertModeEmacsBindingsScreenLine: boolean;
   normalModeKeyBindings: IKeyRemapping[];
   normalModeKeyBindingsNonRecursive: IKeyRemapping[];
   operatorPendingModeKeyBindings: IKeyRemapping[];

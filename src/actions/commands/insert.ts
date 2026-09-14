@@ -14,7 +14,7 @@ import { PositionDiff } from './../../common/motion/position';
 import { configuration } from './../../configuration/configuration';
 import { Mode } from './../../mode/mode';
 import { Register, RegisterMode } from './../../register/register';
-import { TextEditor } from './../../textEditor';
+import { CursorMoveByUnit, CursorMovePosition, TextEditor } from './../../textEditor';
 import { BaseCommand, RegisterAction } from './../base';
 import { CommandNumber } from './actions';
 import { DefaultDigraphs } from './digraphs';
@@ -801,10 +801,52 @@ export class ArrowsInInsertMode extends BaseMovement {
 }
 
 /**
+ * 把光标交给 VS Code 移动, 再把结果位置读回来.
+ *
+ * 折行位置只有 VS Code 知道, 所以可视行相关的移动直接派发 `cursorMove` 命令, 与 `MoveByScreenLine` 的做法一致.
+ * 该命令会同时移动所有光标, 因此只让第一个光标发起移动, 其余光标只回报自己的新位置.
+ */
+async function moveCursorWithCommand(
+  vimState: VimState,
+  multicursorIndex: number,
+  to: CursorMovePosition,
+  by?: CursorMoveByUnit,
+): Promise<Position> {
+  if (multicursorIndex === 0) {
+    await vscode.commands.executeCommand('cursorMove', { to, by, value: 1, select: false });
+  }
+
+  return vimState.editor.selections[multicursorIndex]?.active ?? vimState.cursorStopPosition;
+}
+
+/**
+ * `<C-a>` 的两段式跳转: 光标已经在行的第一个非空白字符上时退到真正的行首, 否则停在非空白行首.
+ */
+async function moveToFirstNonBlankOrLineBegin(
+  vimState: VimState,
+  multicursorIndex: number,
+  firstNonBlank: CursorMovePosition,
+  lineBegin: CursorMovePosition,
+): Promise<Position> {
+  if (multicursorIndex !== 0) {
+    return vimState.editor.selections[multicursorIndex]?.active ?? vimState.cursorStopPosition;
+  }
+
+  const before = vimState.editor.selection.active;
+  const afterFirstNonBlank = await moveCursorWithCommand(vimState, 0, firstNonBlank);
+
+  return afterFirstNonBlank.isEqual(before)
+    ? moveCursorWithCommand(vimState, 0, lineBegin)
+    : afterFirstNonBlank;
+}
+
+/**
  * Insert 模式下的行首/行尾移动.
  *
  * Vim 在 insert 模式下同样支持 <Home>/<End>, 但 VS Code 把这两个键留给编辑器自身, 不会送到扩展,
  * 因此这两个 action 只会在被派发时命中, 例如 `vim.insertModeEmacsBindings` 把 <C-a>/<C-e> 映射到这里.
+ *
+ * `<C-a>` 采用两段式跳转, 边界按 `vim.insertModeEmacsBindingsScreenLine` 在逻辑行与可视行之间切换.
  */
 @RegisterAction
 class MoveLineBeginInInsertMode extends BaseMovement {
@@ -812,7 +854,22 @@ class MoveLineBeginInInsertMode extends BaseMovement {
   keys = ['<Home>'];
 
   public override async execAction(position: Position, vimState: VimState): Promise<Position> {
-    return position.getLineBegin();
+    if (configuration.insertModeEmacsBindingsScreenLine) {
+      return moveToFirstNonBlankOrLineBegin(
+        vimState,
+        this.multicursorIndex ?? 0,
+        'wrappedLineFirstNonWhitespaceCharacter',
+        'wrappedLineStart',
+      );
+    }
+
+    const line = vimState.document.lineAt(position.line).text;
+    const firstNonBlankColumn = line.search(/\S/);
+    const firstNonBlank = firstNonBlankColumn === -1 ? 0 : firstNonBlankColumn;
+
+    return position.character === firstNonBlank
+      ? position.getLineBegin()
+      : new Position(position.line, firstNonBlank);
   }
 }
 
@@ -822,6 +879,56 @@ class MoveLineEndInInsertMode extends BaseMovement {
   keys = ['<End>'];
 
   public override async execAction(position: Position, vimState: VimState): Promise<Position> {
+    if (configuration.insertModeEmacsBindingsScreenLine) {
+      return moveCursorWithCommand(vimState, this.multicursorIndex ?? 0, 'wrappedLineEnd');
+    }
+
     return position.getLineEnd();
   }
+}
+
+/**
+ * `vim.insertModeEmacsBindings` 的 `<C-p>`/`<C-n>` 行移动.
+ *
+ * 这两个键由 `vim.remap` 注入, 所以使用独立的按键记号, 以免影响 Insert 模式下的箭头键:
+ * 箭头键始终按逻辑行移动, 这里的行语义则由 `vim.insertModeEmacsBindingsScreenLine` 决定.
+ */
+@RegisterAction
+class MoveLineUpInInsertMode extends BaseMovement {
+  override modes = [Mode.Insert];
+  keys = ['<C-S-p>'];
+
+  public override async execAction(position: Position, vimState: VimState): Promise<Position> {
+    return moveEmacsLine(position, vimState, this.multicursorIndex ?? 0, 'up', this.keysPressed);
+  }
+}
+
+@RegisterAction
+class MoveLineDownInInsertMode extends BaseMovement {
+  override modes = [Mode.Insert];
+  keys = ['<C-S-n>'];
+
+  public override async execAction(position: Position, vimState: VimState): Promise<Position> {
+    return moveEmacsLine(position, vimState, this.multicursorIndex ?? 0, 'down', this.keysPressed);
+  }
+}
+
+async function moveEmacsLine(
+  position: Position,
+  vimState: VimState,
+  multicursorIndex: number,
+  direction: 'up' | 'down',
+  keysPressed: string[],
+): Promise<Position> {
+  // 与 ArrowsInInsertMode 保持一致: 移动光标会结束当前插入, 让 `.` 从 `i` 开始重复.
+  vimState.recordedState.actionsRun = [new Insert()];
+  vimState.historyTracker.addChange(true);
+  vimState.historyTracker.finishCurrentStep();
+
+  if (configuration.insertModeEmacsBindingsScreenLine) {
+    return moveCursorWithCommand(vimState, multicursorIndex, direction, 'wrappedLine');
+  }
+
+  const movement = direction === 'up' ? new MoveUp(keysPressed) : new MoveDown(keysPressed);
+  return movement.execAction(position, vimState);
 }
