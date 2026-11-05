@@ -4,6 +4,8 @@
 default:
     @just --list
 
+vsix: install package
+
 # 按 yarn.lock 严格安装依赖.
 install:
     yarn install --frozen-lockfile
